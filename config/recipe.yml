@@ -23,9 +23,15 @@ modules:
     install:
     # - micro
     # - starship
+      - fish
+      - fira-code-fonts
+      - langpacks-en_GB
+      - libvirt
+      - qemu
+      - virt-manager
     remove:
-      - firefox # default firefox removed in favor of flatpak
-      - firefox-langpacks # langpacks needs to also be removed to prevent dependency problems
+      # - firefox # default firefox removed in favor of flatpak
+      # - firefox-langpacks # langpacks needs to also be removed to prevent dependency problems
   - type: default-flatpaks
     notify: true # Send notification after install/uninstall is finished (true/false)
     system:
