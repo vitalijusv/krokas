@@ -184,6 +184,7 @@ jobs:
             RECIPE=${{ matrix.recipe }}
             IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}
           labels: ${{ steps.meta.outputs.labels }}
+          layers: true
           oci: true
 
       # Push the image to GHCR (Image Registry)
