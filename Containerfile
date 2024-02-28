@@ -11,5 +11,15 @@ RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-fre
         --install ffmpeg --install ffmpeg-libs && \
     ostree container commit
 
-RUN rpm-ostree install fish && \
+RUN rpm-ostree install fish fzf zstd htop && \
+    ostree container commit
+
+RUN rpm-ostree install fira-code-fonts langpacks-en_GB && \
+    ostree container commit
+
+RUN rpm-ostree install qemu-system-x86 qemu-img qemu-kvm && \
+    ostree container commit
+
+RUN rpm-ostree install libvirt virt-manager && \
+    rm var/lib/unbound/root.key && \
     ostree container commit
