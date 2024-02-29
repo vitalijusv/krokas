@@ -11,7 +11,12 @@ RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-fre
         --install ffmpeg --install ffmpeg-libs && \
     ostree container commit
 
-RUN rpm-ostree install fish fzf zstd htop && \
+RUN rpm-ostree install fish fzf zstd htop moreutils && \
+    ostree container commit
+
+COPY cosign.pub /etc/pki/containers/krokas.pub
+RUN jq '.transports.docker |= { "ghcr.io/vitalijusv/krokas": [{ "type": "sigstoreSigned", "keyPath": "/etc/pki/containers/krokas.pub", "signedIdentity": { "type": "matchRepository" } }] } + .' /etc/containers/policy.json | sponge /etc/containers/policy.json && \
+    printf "docker:\n  ghcr.io/vitalijusv:\n    use-sigstore-attachments: true\n" > /etc/containers/registries.d/krokas.yaml && \
     ostree container commit
 
 RUN rpm-ostree install fira-code-fonts langpacks-en_GB && \
