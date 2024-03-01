@@ -15,7 +15,20 @@ RUN rpm-ostree install fish fzf zstd htop moreutils && \
     ostree container commit
 
 COPY cosign.pub /etc/pki/containers/krokas.pub
-RUN jq '.transports.docker |= { "ghcr.io/vitalijusv/krokas": [{ "type": "sigstoreSigned", "keyPath": "/etc/pki/containers/krokas.pub", "signedIdentity": { "type": "matchRepository" } }] } + .' /etc/containers/policy.json | sponge /etc/containers/policy.json && \
+# jq ' | .transports.docker."" = $default'
+RUN jq '.default as $default \
+    | .default[0].type = "reject" \
+    | .transports.docker."ghcr.io/vitalijusv/krokas"[0] |= (.type="sigstoreSigned" | .keyPath="/etc/pki/containers/krokas.pub" | .signedIdentity.type="matchRepository") \
+    | .transports.docker."" = $default \
+    | .transports."docker-daemon"."" = $default \
+    | .transports.atomic."" = $default \
+    | .transports."containers-storage"."" = $default \
+    | .transports.dir."" = $default \
+    | .transports.oci."" = $default \
+    | .transports."oci-archive"."" = $default \
+    | .transports."docker-archive"."" = $default \
+    | .transports.tarball."" = $default \
+    '  /etc/containers/policy.json | sponge /etc/containers/policy.json && \
     printf "docker:\n  ghcr.io/vitalijusv:\n    use-sigstore-attachments: true\n" > /etc/containers/registries.d/krokas.yaml && \
     ostree container commit
 
