@@ -20,6 +20,10 @@ on: # https://docs.github.com/en/actions/using-workflows/events-that-trigger-wor
 
 env:
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  IMAGE_NAME: krokas
+  IMAGE_DESCRIPTION: "A custom Fedora Silverblue image for personal use"
+  IMAGE_MAJOR_VERSION: 39
+  BASE_IMAGE_URL: quay.io/fedora/fedora-silverblue
 
 # Only deploys the branch named "live". Ignores all other branches, to allow
 # having "development" branches without interfering with GHCR image uploads.
@@ -33,14 +37,6 @@ jobs:
       id-token: write
     strategy:
       fail-fast: false
-
-      matrix:
-# !!!
-        # Add recipes for all the images you want to build here.
-        # Don't add module configuration files, you will get errors.
-        recipe:
-          - recipe.yml
-# !!!
 
     steps:
       # Checkout push-to-registry action GitHub repository
@@ -69,25 +65,8 @@ jobs:
             exit 1
           fi
 
-      - name: Add yq (for reading recipe.yml)
-        uses: mikefarah/yq@v4.41.1
-
       - name: Install Podman (newer version)
         uses: gacts/install-podman@v1
-
-      - name: Gather image data from recipe
-        run: |
-          echo "IMAGE_NAME=$(yq '.name' ./config/${{ matrix.recipe }})" >> $GITHUB_ENV
-          echo "IMAGE_DESCRIPTION=$(yq '.description' ./config/${{ matrix.recipe }})" >> $GITHUB_ENV
-          echo "IMAGE_MAJOR_VERSION=$(yq '.image-version' ./config/${{ matrix.recipe }})" >> $GITHUB_ENV
-          BASE_IMAGE=$(yq '.base-image' ./config/${{ matrix.recipe }})
-          echo "BASE_IMAGE_URL=$BASE_IMAGE" >> $GITHUB_ENV
-          echo "BASE_IMAGE_NAME=$(echo $BASE_IMAGE | sed 's/.*\/.*\///')" >> $GITHUB_ENV
-
-      - name: Verify base image
-        uses: EyeCantCU/cosign-action/verify@v0.2.2
-        with:
-          containers: ${{ env.BASE_IMAGE_NAME }}:${{ env.IMAGE_MAJOR_VERSION }}
 
       - name: Get current version
         id: labels
@@ -161,13 +140,6 @@ jobs:
         with:
           string: ${{ env.IMAGE_NAME }}
 
-      - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v2
-        with:
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-
       # Build image using Buildah action
       - name: Build Image
         id: build_image
@@ -181,7 +153,6 @@ jobs:
           build-args: |
             IMAGE_MAJOR_VERSION=${{ env.IMAGE_MAJOR_VERSION }}
             BASE_IMAGE_URL=${{ env.BASE_IMAGE_URL }}
-            RECIPE=${{ matrix.recipe }}
             IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}
           labels: ${{ steps.meta.outputs.labels }}
           layers: true
