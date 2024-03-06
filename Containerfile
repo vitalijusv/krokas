@@ -1,21 +1,12 @@
-FROM quay.io/fedora/fedora-silverblue:39
+ARG IMAGE_MAJOR_VERSION=39
+ARG BASE_IMAGE_URL=quay.io/fedora/fedora-silverblue
 
-RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-39.noarch.rpm && \
-    rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-39.noarch.rpm && \
-    ostree container commit
-
-RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 && \
-    ostree container commit
-
-RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
-        --install ffmpeg --install ffmpeg-libs && \
-    ostree container commit
+FROM ${BASE_IMAGE_URL}:${IMAGE_MAJOR_VERSION}
 
 RUN rpm-ostree install fish fzf zstd htop moreutils && \
     ostree container commit
 
 COPY cosign.pub /etc/pki/containers/krokas.pub
-# jq ' | .transports.docker."" = $default'
 RUN jq '.default as $default \
     | .default[0].type = "reject" \
     | .transports.docker."ghcr.io/vitalijusv/krokas"[0] |= (.type="sigstoreSigned" | .keyPath="/etc/pki/containers/krokas.pub" | .signedIdentity.type="matchRepository") \
@@ -41,3 +32,15 @@ RUN rpm-ostree install qemu-system-x86 qemu-img qemu-kvm && \
 RUN rpm-ostree install libvirt virt-manager && \
     rm var/lib/unbound/root.key && \
     ostree container commit
+
+RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-39.noarch.rpm && \
+    rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-39.noarch.rpm && \
+    ostree container commit
+
+RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 && \
+    ostree container commit
+
+RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
+        --install ffmpeg --install ffmpeg-libs && \
+    ostree container commit
+
