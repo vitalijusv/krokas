@@ -23,7 +23,8 @@ env:
   IMAGE_NAME: krokas
   IMAGE_DESCRIPTION: "A custom Fedora Silverblue image for personal use"
   IMAGE_MAJOR_VERSION: 39
-  BASE_IMAGE_URL: quay.io/fedora/fedora-silverblue
+  BASE_IMAGE_REGISTRY: quay.io/fedora
+  BASE_IMAGE_NAME: fedora-silverblue
 
 # Only deploys the branch named "live". Ignores all other branches, to allow
 # having "development" branches without interfering with GHCR image uploads.
@@ -68,10 +69,22 @@ jobs:
       - name: Install Podman (newer version)
         uses: gacts/install-podman@v1
 
+      - name: 'Set up skopeo'
+        uses: warjiang/setup-skopeo@v0.1.3
+        with:
+          version: latest
+
+      - name: Copy base image
+        id: copy-base-image
+        run: |
+          skopeo --version
+          skopeo copy --dest-creds ${{ github.actor }}:${{ github.token }} docker://$BASE_IMAGE_REGISTRY/$BASE_IMAGE_NAME:$IMAGE_MAJOR_VERSION docker://$IMAGE_REGISTRY/$BASE_IMAGE_NAME:$IMAGE_MAJOR_VERSION
+          echo "BASE_IMAGE_REGISTRY=$IMAGE_REGISTRY" >> $GITHUB_ENV
+
       - name: Get current version
         id: labels
         run: |
-          ver=$(skopeo inspect docker://${{ env.BASE_IMAGE_URL }}:${{ env.IMAGE_MAJOR_VERSION }} | jq -r '.Labels["org.opencontainers.image.version"]')
+          ver=$(skopeo inspect docker://$BASE_IMAGE_REGISTRY/$BASE_IMAGE_NAME:$IMAGE_MAJOR_VERSION | jq -r '.Labels["org.opencontainers.image.version"]')
           echo "VERSION=$ver" >> $GITHUB_OUTPUT
 
       - name: Generate tags
@@ -94,7 +107,6 @@ jobs:
           BUILD_TAGS=("${MAJOR_VERSION}" "${MAJOR_VERSION:+$MAJOR_VERSION-}${TIMESTAMP}")
           # --
 
-          BUILD_TAGS+=("${TIMESTAMP}")
           BUILD_TAGS+=("latest")
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -152,7 +164,7 @@ jobs:
             ${{ steps.generate-tags.outputs.alias_tags }}
           build-args: |
             IMAGE_MAJOR_VERSION=${{ env.IMAGE_MAJOR_VERSION }}
-            BASE_IMAGE_URL=${{ env.BASE_IMAGE_URL }}
+            BASE_IMAGE_URL=${{ env.BASE_IMAGE_REGISTRY }}/${{ env.BASE_IMAGE_NAME }}
             IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}
           labels: ${{ steps.meta.outputs.labels }}
           layers: true
