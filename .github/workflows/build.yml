@@ -119,20 +119,6 @@ jobs:
           done
           echo "alias_tags=${alias_tags[*]}" >> $GITHUB_OUTPUT
 
-      # Build metadata
-      - name: Image Metadata
-        uses: docker/metadata-action@v5
-        id: meta
-        with:
-          images: |
-            ${{ env.IMAGE_NAME }}
-          labels: |
-            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-            org.opencontainers.image.version=${{ steps.labels.outputs.VERSION }}
-            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/ublue-os/startingpoint/main/README.md
-            io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/120078124?s=200&v=4
-
       # Workaround bug where capital letters in your GitHub username make it impossible to push to GHCR.
       # https://github.com/macbre/push-to-ghcr/issues/12
       - name: Lowercase Registry
@@ -150,20 +136,14 @@ jobs:
       # Build image using Buildah action
       - name: Build Image
         id: build_image
-        uses: redhat-actions/buildah-build@v2
-        with:
-          containerfiles: |
-            ./Containerfile
-          image: ${{ env.IMAGE_NAME }}
-          tags: |
-            ${{ steps.generate-tags.outputs.alias_tags }}
-          build-args: |
-            IMAGE_MAJOR_VERSION=${{ env.IMAGE_MAJOR_VERSION }}
-            BASE_IMAGE_URL=${{ env.BASE_IMAGE_REGISTRY }}/${{ env.BASE_IMAGE_NAME }}
-            IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}
-          labels: ${{ steps.meta.outputs.labels }}
-          layers: true
-          oci: true
+        run: |
+          podman build --pull=newer \
+            --build-arg "BASE_IMAGE_URL=$BASE_IMAGE_REGISTRY/$BASE_IMAGE_NAME" \
+            --build-arg "IMAGE_MAJOR_VERSION=$IMAGE_MAJOR_VERSION" \
+            --build-arg "IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}" \
+            $(for t in ${{ steps.generate-tags.outputs.alias_tags }}; do echo --tag $IMAGE_NAME:$t; done) \
+            .
+          echo 
 
       # Push the image to GHCR (Image Registry)
       - name: Push To GHCR
@@ -174,8 +154,8 @@ jobs:
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_PASSWORD: ${{ github.token }}
         with:
-          image: ${{ steps.build_image.outputs.image }}
-          tags: ${{ steps.build_image.outputs.tags }}
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ steps.generate-tags.outputs.alias_tags }}
           registry: ${{ steps.registry_case.outputs.lowercase }}
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
