@@ -1,9 +1,9 @@
 ARG IMAGE_MAJOR_VERSION=39
-ARG BASE_IMAGE_URL=quay.io/fedora/fedora-silverblue
+ARG BASE_IMAGE=quay.io/fedora-ostree-desktops/silverblue:${IMAGE_MAJOR_VERSION}
 
-FROM ${BASE_IMAGE_URL}:${IMAGE_MAJOR_VERSION}
+FROM ${BASE_IMAGE}
 
-RUN rpm-ostree install fish fzf zstd htop moreutils && \
+RUN rpm-ostree install fish moreutils && \
     ostree container commit
 
 COPY cosign.pub /etc/pki/containers/krokas.pub
@@ -33,8 +33,9 @@ RUN rpm-ostree install libvirt virt-manager && \
     rm var/lib/unbound/root.key && \
     ostree container commit
 
-RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-39.noarch.rpm && \
-    rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-39.noarch.rpm && \
+ARG IMAGE_MAJOR_VERSION
+RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
+    rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
     ostree container commit
 
 RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 && \
