@@ -39,6 +39,7 @@ RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${
     ostree container commit
 
 RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 && \
+    rpm-ostree install libva-utils vdpauinfo mesa-vdpau-drivers-freeworld && \
     ostree container commit
 
 RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
