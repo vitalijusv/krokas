@@ -38,11 +38,13 @@ RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${
     rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
     ostree container commit
 
-RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 && \
-    rpm-ostree install libva-utils vdpauinfo mesa-vdpau-drivers-freeworld && \
+RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 \
+    --install libva-utils --install vdpauinfo --install mesa-vdpau-drivers-freeworld && \
     ostree container commit
 
-RUN rpm-ostree override remove  libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
+RUN rpm-ostree override remove libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
+        --install gstreamer1-plugins-bad-freeworld --install gstreamer1-plugins-ugly \
+        --install pipewire-codec-aptx --install libheif-freeworld \
         --install ffmpeg --install ffmpeg-libs && \
     ostree container commit
 
