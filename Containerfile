@@ -3,11 +3,13 @@ ARG BASE_IMAGE=quay.io/fedora-ostree-desktops/silverblue:${IMAGE_MAJOR_VERSION}
 
 FROM ${BASE_IMAGE}
 
-RUN rpm-ostree install fish moreutils && \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree install fish moreutils && \
     ostree container commit
 
-COPY cosign.pub /etc/pki/containers/krokas.pub
-RUN jq '.default as $default \
+RUN --mount=type=bind,source=cosign.pub,target=/run/krokas.pub,ro=true,U=true,relabel=private \
+    mkdir -p /etc/pki/containers && cp /run/krokas.pub /etc/pki/containers/krokas.pub && \
+    jq '.default as $default \
     | .default[0].type = "reject" \
     | .transports.docker."ghcr.io/vitalijusv/krokas"[0] |= (.type="sigstoreSigned" | .keyPath="/etc/pki/containers/krokas.pub" | .signedIdentity.type="matchRepository") \
     | .transports.docker."" = $default \
@@ -23,13 +25,16 @@ RUN jq '.default as $default \
     printf "docker:\n  ghcr.io/vitalijusv:\n    use-sigstore-attachments: true\n" > /etc/containers/registries.d/krokas.yaml && \
     ostree container commit
 
-RUN rpm-ostree install fira-code-fonts langpacks-en_GB && \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree install fira-code-fonts langpacks-en_GB && \
     ostree container commit
 
-RUN rpm-ostree install qemu-system-x86 qemu-img qemu-kvm && \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree install qemu-system-x86 qemu-img qemu-kvm && \
     ostree container commit
 
-RUN rpm-ostree install libvirt virt-manager && \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree install libvirt virt-manager && \
     rm var/lib/unbound/root.key && \
     ostree container commit
 
@@ -38,11 +43,13 @@ RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${
     rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
     ostree container commit
 
-RUN rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 \
     --install libva-utils --install vdpauinfo --install mesa-vdpau-drivers-freeworld && \
     ostree container commit
 
-RUN rpm-ostree override remove libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree override remove libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
         --install gstreamer1-plugins-bad-freeworld --install gstreamer1-plugins-ugly \
         --install pipewire-codec-aptx --install libheif-freeworld \
         --install ffmpeg --install ffmpeg-libs && \
