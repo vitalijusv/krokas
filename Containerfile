@@ -1,4 +1,4 @@
-ARG IMAGE_MAJOR_VERSION=39
+ARG IMAGE_MAJOR_VERSION=40
 ARG BASE_IMAGE=quay.io/fedora-ostree-desktops/silverblue:${IMAGE_MAJOR_VERSION}
 
 FROM ${BASE_IMAGE}
@@ -35,7 +35,6 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
 
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     rpm-ostree install libvirt virt-manager && \
-    rm var/lib/unbound/root.key && \
     ostree container commit
 
 ARG IMAGE_MAJOR_VERSION
