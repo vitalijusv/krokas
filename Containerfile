@@ -29,6 +29,9 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     rpm-ostree install fira-code-fonts langpacks-en_GB && \
     ostree container commit
 
+RUN rpm -Uvh $(curl -sL https://api.github.com/repos/VSCodium/vscodium/releases/latest | jq -r '.assets[] | select(.name | endswith("x86_64.rpm")) | .browser_download_url') && \
+    ostree container commit
+
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     rpm-ostree install qemu-system-x86 qemu-img qemu-kvm && \
     ostree container commit
@@ -53,4 +56,3 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
         --install pipewire-codec-aptx --install libheif-freeworld \
         --install ffmpeg --install ffmpeg-libs && \
     ostree container commit
-
