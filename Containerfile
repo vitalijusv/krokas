@@ -40,9 +40,9 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     rpm-ostree install libvirt virt-manager && \
     ostree container commit
 
-ARG IMAGE_MAJOR_VERSION
-RUN rpm -Uvh https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
-    rpm -Uvh https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${IMAGE_MAJOR_VERSION}.noarch.rpm && \
+RUN rpm -Uvh \
+        https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+        https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && \
     ostree container commit
 
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
