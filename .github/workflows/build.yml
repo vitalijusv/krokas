@@ -24,7 +24,7 @@ env:
 jobs:
   push-ghcr:
     name: Build and push image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -59,13 +59,14 @@ jobs:
             exit 1
           fi
 
-      - name: Install Podman (newer version)
-        uses: gacts/install-podman@v1
+      - name: Install Podman, skopeo
+        run: |
+          sudo apt update
+          sudo apt install podman skopeo
 
       - name: Copy base image
         id: copy-base-image
         run: |
-          skopeo --version
           BASE_IMAGE_MIRROR=$IMAGE_REGISTRY/$IMAGE_NAME:$IMAGE_MAJOR_VERSION-base
           skopeo copy --dest-creds ${{ github.actor }}:${{ github.token }} docker://$BASE_IMAGE docker://$BASE_IMAGE_MIRROR
           echo "BASE_IMAGE=$BASE_IMAGE_MIRROR" >> $GITHUB_ENV
