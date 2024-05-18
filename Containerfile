@@ -46,8 +46,9 @@ RUN rpm -Uvh \
     ostree container commit
 
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
-    rpm-ostree override remove mesa-va-drivers --install mesa-va-drivers-freeworld.x86_64 \
-    --install libva-utils --install vdpauinfo --install mesa-vdpau-drivers-freeworld.x86_64 && \
+    rpm-ostree override remove mesa-va-drivers \
+        --install mesa-va-drivers-freeworld.x86_64 \
+        --install libva-utils && \
     ostree container commit
 
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
