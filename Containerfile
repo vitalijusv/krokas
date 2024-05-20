@@ -40,7 +40,8 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     rpm-ostree install libvirt virt-manager && \
     ostree container commit
 
-RUN rpm -Uvh \
+RUN --mount=type=cache,target=/var/cache/rpm-ostree \
+    rpm-ostree install \
         https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
         https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && \
     ostree container commit
@@ -52,8 +53,8 @@ RUN --mount=type=cache,target=/var/cache/rpm-ostree \
     ostree container commit
 
 RUN --mount=type=cache,target=/var/cache/rpm-ostree \
-    rpm-ostree override remove libavcodec-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
-        --install gstreamer1-plugins-bad-freeworld --install gstreamer1-plugins-ugly \
-        --install pipewire-codec-aptx --install libheif-freeworld \
+    rpm-ostree override remove ffmpeg-free libavcodec-free libavdevice-free libavfilter-free libavformat-free libavutil-free libpostproc-free libswresample-free libswscale-free \
         --install ffmpeg --install ffmpeg-libs && \
+    rpm-ostree install gstreamer1-plugin-libav gstreamer1-plugins-bad-free-extras gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi \
+        pipewire-codec-aptx libheif-freeworld && \
     ostree container commit
