@@ -131,7 +131,6 @@ jobs:
             --build-arg "BASE_IMAGE=$BASE_IMAGE" \
             --build-arg "IMAGE_MAJOR_VERSION=$IMAGE_MAJOR_VERSION" \
             --build-arg "IMAGE_REGISTRY=${{ steps.registry_case.outputs.lowercase }}" \
-            --timestamp 1713788019 \
             $(for t in ${{ steps.generate-tags.outputs.alias_tags }}; do echo --tag $IMAGE_NAME:$t; done) \
             .
           echo 
